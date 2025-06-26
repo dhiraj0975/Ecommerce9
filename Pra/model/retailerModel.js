@@ -62,6 +62,17 @@ class Retailer {
     return result.affectedRows > 0;
   }
 
+   // Get all retailers with product count
+  static async getAllWithProductCount() {
+    const [rows] = await pool.query(`
+      SELECT r.*, COUNT(p.id) as product_count
+      FROM retailers r
+      LEFT JOIN products p ON p.retailer_id = r.id
+      GROUP BY r.id
+      ORDER BY r.id DESC
+    `);
+    return rows;
+  }
   
 }
 

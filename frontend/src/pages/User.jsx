@@ -327,7 +327,7 @@ const User = () => {
                     <td className="px-4 py-2 border text-center">
                       <button
                         onClick={() => handleOpenRoleModal(user)}
-                        className="w-full h-full text-left p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200"
+                        className="w-full h-full text-left p-2 rounded-md hover:bg-purple-200 active:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200"
                         title="Click to assign roles"
                       >
                         <div className="text-sm">

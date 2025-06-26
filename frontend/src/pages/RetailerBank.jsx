@@ -4,6 +4,7 @@ import { getAllRetailerBanks, getAllRetailers, createRetailerBank, updateRetaile
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { PlusCircle, Edit3, AppWindow, Trash2 } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const itemsPerPage = 7;
 
@@ -57,7 +58,7 @@ const columns = [
         <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-purple-500 text-indigo-100 font-bold text-base">
           {row.name ? row.name.charAt(0).toUpperCase() : "?"}
         </span>
-        <span>{row.name || "N/A"}</span>
+        <span className="font-semibold">{row.name || "N/A"}</span>
       </span>
     ),
   },
@@ -66,7 +67,11 @@ const columns = [
   { key: "account_number", label: "Account Number" },
   { key: "ifsc_code", label: "IFSC Code" },
   { key: "bank_created_at", label: "Bank Created" },
-  { key: "status", label: "Status" },
+  { 
+    key: "status", 
+    label: "Status",
+    render: (row) => getStatusBadge(row.status)
+  },
   {
     key: "actions",
     label: "Actions",
@@ -80,7 +85,7 @@ const columns = [
         </button>
         <button
           className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 flex items-center gap-1"
-          onClick={() => onDelete(row.id)}
+          onClick={() => onDelete(row.bank_id)}
         >
           <Trash2 size={14} /> Delete
         </button>
@@ -100,6 +105,15 @@ const getStatusBadge = (status) => {
   );
 };
 
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'active': return 'bg-gradient-to-r from-green-400 to-green-600 text-white';
+    case 'inactive': return 'bg-gradient-to-r from-red-400 to-red-600 text-white';
+    case 'pending': return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white';
+    default: return 'bg-gray-400 text-white';
+  }
+};
+
 const RetailerBank = () => {
   const [data, setData] = useState([]);
   const [retailers, setRetailers] = useState([]);
@@ -108,6 +122,11 @@ const RetailerBank = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [newBank, setNewBank] = useState(initialBankState());
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = new URLSearchParams(location.search);
+  const initialRetailerId = params.get("retailer_id") || "";
+  const [selectedRetailerId, setSelectedRetailerId] = useState(initialRetailerId);
 
   useEffect(() => {
     fetchData();
@@ -161,15 +180,14 @@ const RetailerBank = () => {
   };
 
   const handleEdit = (row) => {
-    console.log('Editing row:', row);
     setNewBank({
-      retailer_id: retailers.find(r => r.name === row.name)?.id || "",
+      retailer_id: row.retailer_id || "",
       bank_name: row.bank_name || "",
       account_number: row.account_number || "",
       ifsc_code: row.ifsc_code || "",
       account_holder_name: row.account_holder_name || "",
     });
-    setEditingId(row.id);
+    setEditingId(row.bank_id);
     setShowDrawer(true);
   };
 
@@ -185,14 +203,9 @@ const RetailerBank = () => {
     }
   };
 
-  const filteredData = data.filter((row) =>
-    columns.some((col) =>
-      (row[col.key] || "")
-        .toString()
-        .toLowerCase()
-        .includes(search.toLowerCase())
-    )
-  );
+  const filteredData = selectedRetailerId
+    ? data.filter((item) => String(item.retailer_id) === String(selectedRetailerId))
+    : data;
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice(
@@ -229,88 +242,115 @@ const RetailerBank = () => {
               Total: {filteredData.length}
             </span>
           </div>
+
+          {selectedRetailerId && (
+            <div className="flex items-center mb-4">
+              <span className="text-indigo-700 font-semibold mr-2">
+                Showing bank accounts for Retailer ID: {selectedRetailerId}
+              </span>
+              <button
+                onClick={() => navigate("/retailers")}
+                className="ml-2 px-2 py-1 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 text-lg font-bold"
+                title="Back to Retailers"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
           <div className="flex gap-6">
             <div className={`transition-all duration-300 ${showDrawer ? "w-2/3" : "w-full"}`}>
-              <div className="overflow-x-auto rounded-lg border border-gray-200">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-indigo-50">
-                    <tr>
-                      {columns.map((col) => (
-                        <th key={col.key} className="p-3 text-center font-bold text-black whitespace-nowrap">
-                          {col.label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedData.length > 0 ? (
-                      paginatedData.map((row, idx) => (
-                        <tr key={idx} className="border-b border-black hover:bg-indigo-50 transition-all">
-                          {columns.map((col) => (
-                            <td
-                              key={col.key}
-                              className="p-3  text-center max-w-[180px] truncate whitespace-nowrap"
-                              title={row[col.key] || "N/A"}
-                            >
-                              {col.render
-                                ? col.key === "actions"
-                                  ? col.render(row, handleEdit, handleDelete)
-                                  : col.render(row)
-                                : col.key === "status"
-                                ? getStatusBadge(row[col.key])
-                                : row[col.key] !== null && row[col.key] !== undefined && row[col.key] !== ""
-                                ? row[col.key]
-                                : <span className="text-gray-400">N/A</span>}
-                            </td>
-                          ))}
-                        </tr>
-                      ))
-                    ) : (
+              <div className="relative">
+                {selectedRetailerId && (
+                  <button
+                    onClick={() => navigate("/retailers")}
+                    className="absolute top-2 right-2 z-10 bg-white border border-gray-300 shadow-lg rounded-full w-9 h-9 flex items-center justify-center text-gray-500 hover:bg-red-100 hover:text-red-600 transition text-xl"
+                    title="Back to Retailers"
+                  >
+                    ×
+                  </button>
+                )}
+                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-indigo-50">
                       <tr>
-                        <td colSpan={columns.length} className="text-center p-4 text-gray-500">
-                          No data found.
-                        </td>
+                        {columns.map((col) => (
+                          <th key={col.key} className="p-3 text-center font-bold text-black whitespace-nowrap">
+                            {col.label}
+                          </th>
+                        ))}
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-2">
-                  <span className="text-sm text-gray-600">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
-                    >
-                      Previous
-                    </button>
-                    {[...Array(totalPages)].map((_, idx) => (
-                      <button
-                        key={idx + 1}
-                        onClick={() => setCurrentPage(idx + 1)}
-                        className={`px-3 py-1 rounded ${
-                          currentPage === idx + 1
-                            ? 'bg-indigo-600 text-white font-bold'
-                            : 'bg-gray-100 text-gray-700 hover:bg-indigo-100'
-                        }`}
-                      >
-                        {idx + 1}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
-                    >
-                      Next
-                    </button>
-                  </div>
+                    </thead>
+                    <tbody>
+                      {paginatedData.length > 0 ? (
+                        paginatedData.map((row, idx) => (
+                          <tr key={row.retailer_id + '-' + row.account_number} className="border-b border-black hover:bg-indigo-50 transition-all">
+                            {columns.map((col) => (
+                              <td
+                                key={col.key}
+                                className="p-3  text-center max-w-[180px] truncate whitespace-nowrap"
+                                title={row[col.key] || "N/A"}
+                              >
+                                {col.render
+                                  ? col.key === "actions"
+                                    ? col.render(row, handleEdit, handleDelete)
+                                    : col.render(row)
+                                  : col.key === "status"
+                                  ? getStatusBadge(row[col.key])
+                                  : row[col.key] !== null && row[col.key] !== undefined && row[col.key] !== ""
+                                  ? row[col.key]
+                                  : <span className="text-gray-400">N/A</span>}
+                              </td>
+                            ))}
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={columns.length} className="text-center p-4 text-gray-500">
+                            No data found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+                {totalPages > 1 && (
+                  <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-2">
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      {[...Array(totalPages)].map((_, idx) => (
+                        <button
+                          key={idx + 1}
+                          onClick={() => setCurrentPage(idx + 1)}
+                          className={`px-3 py-1 rounded ${
+                            currentPage === idx + 1
+                              ? 'bg-indigo-600 text-white font-bold'
+                              : 'bg-gray-100 text-gray-700 hover:bg-indigo-100'
+                          }`}
+                        >
+                          {idx + 1}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {showDrawer && (

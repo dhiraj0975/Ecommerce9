@@ -10,11 +10,18 @@ const LogOutDropdown = () => {
   const dropdownRef = useRef();
   const navigate = useNavigate();
 
+  // Get email and name from localStorage
+  const email = localStorage.getItem("adminEmail") || "No email";
+  const name = localStorage.getItem("adminName") || "Admin";
+
   const handleLogout = async () => {
     try {
       await logoutAdmin();
       // Remove token from cookie
       document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      // Remove email from localStorage
+      localStorage.removeItem("adminEmail");
+      localStorage.removeItem("adminName");
       // If using localStorage/sessionStorage, also clear those:
       // localStorage.removeItem('token');
       navigate('/login');
@@ -44,7 +51,10 @@ const LogOutDropdown = () => {
           alt="Profile"
           className="w-9 h-9 rounded-full border border-gray-300"
         />
-        <p className="text-sm font-medium text-gray-800">Welcome, Dhiraj</p>
+        <div>
+          <p className="text-sm font-medium text-gray-800">{email.split('@')[0]}</p>
+          <p className="text-xs text-gray-500">{email}</p>
+        </div>
         <IoMdArrowDropdown className="text-xl text-gray-600" />
       </div>
 

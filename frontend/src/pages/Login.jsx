@@ -31,7 +31,9 @@ const Login = () => {
       const res = await loginAdmin(formData);
       
       if (res.data.success) {
-       toast.success("✅ Login successfully!");
+        localStorage.setItem("adminEmail", res.data.user.email);
+        localStorage.setItem("adminName", res.data.user.name);
+        toast.success("✅ Login successfully!");
         navigate("/");
       }
     } catch (err) {

@@ -2,27 +2,30 @@ const { pool } = require("../Config/Db");
 
 class RetailerBank {
   static async getAll() {
-    const [rows] = await pool.query(`SELECT
-  r.name,
-  r.email,
-  r.phone,
-  r.address,
-  r.business_name,
-  r.status,
-  r.created_at AS retailer_created_at,
-  r.updated_at AS retailer_updated_at,
-  b.bank_name,
-  b.account_number,
-  b.ifsc_code,
-  b.account_holder_name,
-  b.created_at AS bank_created_at
-FROM
-  retailers r
-LEFT JOIN
-  retailer_bank_accounts b
-ON
-  r.id = b.retailer_id;
-`);
+    const [rows] = await pool.query(`
+      SELECT 
+        r.id as retailer_id,
+        r.name,
+        r.email,
+        r.phone,
+        r.address,
+        r.business_name,
+        r.status,
+        r.created_at AS retailer_created_at,
+        r.updated_at AS retailer_updated_at,
+        b.bank_name,
+        b.account_number,
+        b.ifsc_code,
+        b.account_holder_name,
+        b.created_at AS bank_created_at,
+        b.id as bank_id
+      FROM
+        retailers r
+      LEFT JOIN
+        retailer_bank_accounts b
+      ON
+        r.id = b.retailer_id;
+    `);
     return rows;
   }
 

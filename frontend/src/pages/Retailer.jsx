@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../component/Layout";
-import { getAllRetailers, createRetailer, updateRetailer, deleteRetailer } from "../api";
+import { getAllRetailersWithProductCount, createRetailer, updateRetailer, deleteRetailer } from "../api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Search, AppWindow, PlusCircle, Users, Building2, MapPin, Phone, Mail, Edit3, Trash2, Eye } from "lucide-react";
@@ -42,8 +42,8 @@ const Retailer = () => {
 
   const fetchRetailers = async () => {
     try {
-      const res = await getAllRetailers();
-      let data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+      const res = await getAllRetailersWithProductCount();
+      let data = Array.isArray(res.data.data) ? res.data.data : res.data?.data || [];
       setRetailers(data);
       setFilteredRetailers(data);
     } catch (err) {
@@ -269,8 +269,18 @@ const Retailer = () => {
                         <div className="flex-1">
                           <h3 className="text-xl font-bold text-gray-800 mb-1">{r.name}</h3>
                           <p className="text-gray-600 text-sm">{r.business_name}</p>
+                          {/* Product Count Badge (just below business name) */}
+                          <span
+                            className="inline-block mt-2 bg-indigo-600 text-white text-xs font-bold px-4 py-1 rounded-full shadow cursor-pointer hover:bg-indigo-700 transition"
+                            onClick={() => navigate(`/products?retailer_id=${r.id}`)}
+                            title="View all products for this retailer"
+                          >
+                            Products: {r.product_count || 0}
+                          </span>
                         </div>
-                        <span className={`relative px-3 py-1 text-xs font-semibold rounded-full cursor-pointer ${getStatusColor(r.status)}`}
+                        {/* Status Badge */}
+                        <span
+                          className={`relative px-3 py-1 text-xs font-semibold rounded-full cursor-pointer ${getStatusColor(r.status)}`}
                           tabIndex={0}
                           onClick={e => {
                             e.stopPropagation();
@@ -315,6 +325,12 @@ const Retailer = () => {
 
                       {/* Actions */}
                       <div className="flex gap-2 pt-4 border-t border-gray-100">
+                        <button
+                          onClick={() => navigate(`/retailer-bank?retailer_id=${r.id}`)}
+                          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-300 text-sm font-medium"
+                        >
+                          Bank Details
+                        </button>
                         <button
                           onClick={() => handleEdit(r)}
                           className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 text-sm font-medium"

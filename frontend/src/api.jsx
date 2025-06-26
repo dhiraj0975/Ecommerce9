@@ -63,6 +63,7 @@ export const getAllRetailers = () => API.get('/retailers');
 export const createRetailer = (data) => API.post('/retailers', data);
 export const updateRetailer = (id, data) => API.put(`/retailers/${id}`, data);
 export const deleteRetailer = (id) => API.delete(`/retailers/${id}`);
+export const getAllRetailersWithProductCount = () => API.get('/retailers/with-product-count');
 
 // ========== Retailer Banks ==========
 export const getAllRetailerBanks = () => API.get('/retailer-banks');

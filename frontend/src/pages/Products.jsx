@@ -11,7 +11,8 @@ import {
 } from "../api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Search, List, AppWindow, PlusCircle } from "lucide-react";
+import { Search, List, AppWindow, PlusCircle, X } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const itemsPerPage = 6;
 
@@ -31,6 +32,13 @@ function Products() {
   const [currentDescription, setCurrentDescription] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusDropdownOpenId, setStatusDropdownOpenId] = useState(null);
+
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const initialRetailerId = params.get("retailer_id") || "";
+  const [selectedRetailerId, setSelectedRetailerId] = useState(initialRetailerId);
+
+  const navigate = useNavigate();
 
   function initialProductState() {
     return {
@@ -156,20 +164,26 @@ function Products() {
   const handleSubCategoryFilter = (e) => {
     const subCatId = e.target.value;
     setSelectedSubCategoryId(subCatId);
-    filterAndSearchProducts(searchQuery, subCatId);
+    filterAndSearchProducts(searchQuery, subCatId, selectedRetailerId);
     setCurrentPage(1);
   };
 
   useEffect(() => {
-    filterAndSearchProducts(searchQuery, selectedSubCategoryId);
-  }, [searchQuery, products, selectedSubCategoryId]);
+    filterAndSearchProducts(searchQuery, selectedSubCategoryId, selectedRetailerId);
+  }, [searchQuery, products, selectedSubCategoryId, selectedRetailerId]);
 
-  const filterAndSearchProducts = (query, subCatId) => {
+  const filterAndSearchProducts = (query, subCatId, retailerId) => {
     let tempFiltered = [...products];
 
     if (subCatId) {
       tempFiltered = tempFiltered.filter(
         (p) => p.subcategory_id?.toString() === subCatId
+      );
+    }
+
+    if (retailerId) {
+      tempFiltered = tempFiltered.filter(
+        (p) => String(p.retailer_id) === String(retailerId)
       );
     }
 
@@ -257,6 +271,21 @@ function Products() {
               </span>
             </div>
           </div>
+
+          {selectedRetailerId && (
+            <div className="flex items-center mb-4">
+              <span className="text-indigo-700 font-semibold mr-2">
+                Showing products for Retailer ID: {selectedRetailerId}
+              </span>
+              <button
+                onClick={() => navigate("/retailers")}
+                className="ml-2 px-2 py-1 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 text-lg font-bold"
+                title="Back to Retailers"
+              >
+                ×
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-6 mt-6">
@@ -265,109 +294,120 @@ function Products() {
               showDrawer ? "w-2/3" : "w-full"
             } bg-white p-4 rounded-lg shadow-md`}
           >
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50">
-                <tr className="border-b">
-                  <th className="p-3 text-center">Image</th>
-                  <th className="p-3">Name</th>
-                  <th className="p-3 text-center">Price</th>
-                  <th className="p-3 text-center">Qty</th>
-                  <th className="p-3 text-center">Description</th>
-                  <th className="p-3">SubCategory</th>
-                  <th className="p-3">Retailer Name</th>
-                  <th className="p-3 text-center">Status</th>
-                  <th className="p-3 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedProducts.length > 0 ? (
-                  paginatedProducts.map((p) => (
-                    <tr key={p.id} className="border-b hover:bg-gray-50">
-                      <td className="p-2 text-center">
-                        {p.image_url ? (
-                          <img
-                            src={p.image_url}
-                            alt={p.name}
-                            className="h-12 w-12 object-cover mx-auto rounded-md"
-                          />
-                        ) : (
-                          <div className="h-12 w-12 bg-gray-200 mx-auto rounded-md flex items-center justify-center text-gray-400">
-                            ?
-                          </div>
-                        )}
-                      </td>
-                      <td className="p-3 font-medium">{p.name}</td>
-                      <td className="p-3 text-center">₹{p.price}</td>
-                      <td className="p-3 text-center">{p.quantity}</td>
-                      <td className="p-3 text-center">
-                        <button
-                          onClick={() => {
-                            setCurrentDescription(p.description || "No description provided.");
-                            setShowDescDrawer(true);
-                          }}
-                          className="text-indigo-600 hover:underline"
-                        >
-                          View
-                        </button>
-                      </td>
-                      <td className="p-3">{p.subcategory_name || "N/A"}</td>
-                      <td className="p-3">
-                        {retailers.find(r => String(r.id) === String(p.retailer_id))?.name || "N/A"}
-                      </td>
-                      <td className="p-3 text-center">
-                        <span className={`relative px-2 py-1 text-xs font-semibold rounded-full cursor-pointer ${
-                          p.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}
-                          tabIndex={0}
-                          onClick={e => {
-                            e.stopPropagation();
-                            setStatusDropdownOpenId(p.id === statusDropdownOpenId ? null : p.id);
-                          }}>
-                          {p.status}
-                          {statusDropdownOpenId === p.id && (
-                            <div className="absolute z-10 mt-2 left-0 bg-white border rounded shadow-lg text-gray-700 text-xs min-w-[100px]">
-                              {['available', 'unavailable'].map(opt => (
-                                <div
-                                  key={opt}
-                                  className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${opt === p.status ? 'font-bold text-indigo-600' : ''}`}
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    setStatusDropdownOpenId(null);
-                                    handleStatusChange(p, opt);
-                                  }}
-                                >
-                                  {opt.charAt(0).toUpperCase() + opt.slice(1)}
-                                </div>
-                              ))}
+            <div className="relative">
+              {selectedRetailerId && (
+                <button
+                  onClick={() => navigate("/retailers")}
+                  className="absolute top-2 right-2 z-10 bg-white border border-gray-300 shadow-lg rounded-full w-9 h-9 flex items-center justify-center text-gray-500 hover:bg-red-100 hover:text-red-600 transition text-xl"
+                  title="Back to Retailers"
+                >
+                  <X size={20} />
+                </button>
+              )}
+              <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50">
+                  <tr className="border-b">
+                    <th className="p-3 text-center">Image</th>
+                    <th className="p-3">Name</th>
+                    <th className="p-3 text-center">Price</th>
+                    <th className="p-3 text-center">Qty</th>
+                    <th className="p-3 text-center">Description</th>
+                    <th className="p-3">SubCategory</th>
+                    <th className="p-3">Retailer Name</th>
+                    <th className="p-3 text-center">Status</th>
+                    <th className="p-3 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedProducts.length > 0 ? (
+                    paginatedProducts.map((p) => (
+                      <tr key={p.id} className="border-b hover:bg-gray-50">
+                        <td className="p-2 text-center">
+                          {p.image_url ? (
+                            <img
+                              src={p.image_url}
+                              alt={p.name}
+                              className="h-12 w-12 object-cover mx-auto rounded-md"
+                            />
+                          ) : (
+                            <div className="h-12 w-12 bg-gray-200 mx-auto rounded-md flex items-center justify-center text-gray-400">
+                              ?
                             </div>
                           )}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center space-x-2">
-                        <button
-                          onClick={() => handleEdit(p)}
-                          className="px-3 py-1 bg-yellow-400 text-white rounded-md hover:bg-yellow-500"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(p.id)}
-                          className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
-                        >
-                          Delete
-                        </button>
+                        </td>
+                        <td className="p-3 font-medium">{p.name}</td>
+                        <td className="p-3 text-center">₹{p.price}</td>
+                        <td className="p-3 text-center">{p.quantity}</td>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => {
+                              setCurrentDescription(p.description || "No description provided.");
+                              setShowDescDrawer(true);
+                            }}
+                            className="text-indigo-600 hover:underline"
+                          >
+                            View
+                          </button>
+                        </td>
+                        <td className="p-3">{p.subcategory_name || "N/A"}</td>
+                        <td className="p-3">
+                          {retailers.find(r => String(r.id) === String(p.retailer_id))?.name || "N/A"}
+                        </td>
+                        <td className="p-3 text-center">
+                          <span className={`relative px-2 py-1 text-xs font-semibold rounded-full cursor-pointer ${
+                            p.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          }`}
+                            tabIndex={0}
+                            onClick={e => {
+                              e.stopPropagation();
+                              setStatusDropdownOpenId(p.id === statusDropdownOpenId ? null : p.id);
+                            }}>
+                            {p.status}
+                            {statusDropdownOpenId === p.id && (
+                              <div className="absolute z-10 mt-2 left-0 bg-white border rounded shadow-lg text-gray-700 text-xs min-w-[100px]">
+                                {['available', 'unavailable'].map(opt => (
+                                  <div
+                                    key={opt}
+                                    className={`px-4 py-2 hover:bg-gray-100 cursor-pointer ${opt === p.status ? 'font-bold text-indigo-600' : ''}`}
+                                    onClick={e => {
+                                      e.stopPropagation();
+                                      setStatusDropdownOpenId(null);
+                                      handleStatusChange(p, opt);
+                                    }}
+                                  >
+                                    {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </span>
+                        </td>
+                        <td className="p-3 text-center space-x-2">
+                          <button
+                            onClick={() => handleEdit(p)}
+                            className="px-3 py-1 bg-yellow-400 text-white rounded-md hover:bg-yellow-500"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(p.id)}
+                            className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="text-center p-4 text-gray-500">
+                        No products found.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="text-center p-4 text-gray-500">
-                      No products found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
             {totalPages > 1 && (
               <div className="flex flex-col sm:flex-row justify-between items-center mt-4 gap-2">

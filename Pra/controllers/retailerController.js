@@ -63,6 +63,14 @@ const deleteRetailer = async (req, res) => {
   }
 };
 
+// Get all retailers with product count
+const getAllRetailersWithProductCount = async (req, res) => {
+  try {
+    const retailers = await Retailer.getAllWithProductCount();
+    res.json({ success: true, data: retailers });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching retailers with product count', error: err.message });
+  }
+};
 
-
-module.exports = { getAllRetailers, getRetailer, createRetailer, updateRetailer, deleteRetailer, };
+module.exports = { getAllRetailers, getRetailer, createRetailer, updateRetailer, deleteRetailer, getAllRetailersWithProductCount };
