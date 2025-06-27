@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import Layout from "../component/Layout";
 import { getAllRetailersWithProductCount, createRetailer, updateRetailer, deleteRetailer } from "../api";
 import { ToastContainer, toast } from "react-toastify";
@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { Search, AppWindow, PlusCircle, Users, Building2, MapPin, Phone, Mail, Edit3, Trash2, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { DashboardContext } from "../context/DashboardContext";
 
 const API = axios.create({
   baseURL: 'http://localhost:5000/api',
@@ -35,6 +36,7 @@ const Retailer = () => {
   const [statusDropdownOpenId, setStatusDropdownOpenId] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
   const navigate = useNavigate();
+  const { fetchRecentRetailers } = useContext(DashboardContext);
 
   useEffect(() => {
     fetchRetailers();
@@ -45,17 +47,21 @@ const Retailer = () => {
       const res = await getAllRetailersWithProductCount();
       let data = Array.isArray(res.data.data) ? res.data.data : res.data?.data || [];
       setRetailers(data);
-      setFilteredRetailers(data);
     } catch (err) {
       toast.error("❌ Failed to load retailers");
     }
   };
 
   useEffect(() => {
-    filterAndSearchRetailers(searchQuery, statusFilter);
-  }, [searchQuery, retailers, statusFilter]);
+    filterAndSearchRetailers(searchQuery, statusFilter, true);
+  }, [searchQuery, statusFilter]);
 
-  const filterAndSearchRetailers = (query, status = statusFilter) => {
+  useEffect(() => {
+    filterAndSearchRetailers(searchQuery, statusFilter, false);
+    // eslint-disable-next-line
+  }, [retailers]);
+
+  const filterAndSearchRetailers = (query, status = statusFilter, resetPage = true) => {
     let tempFiltered = [...retailers];
     if (status !== 'all') {
       tempFiltered = tempFiltered.filter(r => r.status === status);
@@ -67,7 +73,7 @@ const Retailer = () => {
       );
     }
     setFilteredRetailers(tempFiltered);
-    setCurrentPage(1);
+    if (resetPage) setCurrentPage(1);
   };
 
   const handleInputChange = (e) => {
@@ -78,22 +84,18 @@ const Retailer = () => {
   const handleAddOrUpdate = async () => {
     try {
       if (editingId) {
-        // Update existing retailer
         await updateRetailer(editingId, newRetailer);
         toast.success("✅ Retailer updated successfully!");
+        fetchRecentRetailers && fetchRecentRetailers();
       } else {
-        // Create new retailer
         await createRetailer(newRetailer);
         toast.success("✅ Retailer added successfully!");
+        fetchRecentRetailers && fetchRecentRetailers();
       }
-      
-      // Refresh the retailers list
       await fetchRetailers();
-      
-      // Reset form and close drawer
-    setShowDrawer(false);
-    setNewRetailer(initialRetailerState());
-    setEditingId(null);
+      setShowDrawer(false);
+      setNewRetailer(initialRetailerState());
+      setEditingId(null);
     } catch (error) {
       console.error("Error:", error);
       toast.error(`❌ ${editingId ? 'Failed to update' : 'Failed to add'} retailer: ${error.response?.data?.message || error.message}`);
@@ -118,7 +120,8 @@ const Retailer = () => {
       try {
         await deleteRetailer(id);
         toast.success("✅ Retailer deleted successfully!");
-        await fetchRetailers(); // Refresh the list
+        await fetchRetailers();
+        fetchRecentRetailers && fetchRecentRetailers();
       } catch (error) {
         console.error("Error:", error);
         toast.error(`❌ Failed to delete retailer: ${error.response?.data?.message || error.message}`);

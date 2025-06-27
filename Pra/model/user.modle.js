@@ -22,6 +22,7 @@ class User {
           u.email,
           u.phone,
           u.status,
+          u.created_at,
           GROUP_CONCAT(r.role_id) AS role_ids,
           GROUP_CONCAT(r.role_name) AS role_names
         FROM users u

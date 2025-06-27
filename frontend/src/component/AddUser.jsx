@@ -1,8 +1,10 @@
 // src/components/AddUserForm.jsx
-import React from "react";
+import React, { useContext } from "react";
 import { CheckCircle, XCircle } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { DashboardContext } from '../context/DashboardContext';
+import { useNavigate } from "react-router-dom";
 
 const AddUserForm = ({
   showModal,
@@ -18,6 +20,9 @@ const AddUserForm = ({
   // console.log("AddUserForm - Roles received:", roles);
   // console.log("AddUserForm - Current newUser:", newUser);
   // console.log("AddUserForm - Current role_ids:", newUser.role_ids);
+
+  const { combinedStatusPie } = useContext(DashboardContext);
+  const navigate = useNavigate();
 
   // Get status styles based on current selection
   const getStatusStyles = () => {

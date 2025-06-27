@@ -1,114 +1,158 @@
 // 📁 src/pages/Dashboard.jsx
-import React, { useState } from "react";
+import React, { useContext } from "react";
 import Layout from './../component/Layout';
 import Card from './../component/Card';
 import AreaChartBox from './../component/AreaChartBox';
 import BarChartBox from './../component/BarChartBox';
+import LineChartBox from './../component/LineChartBox';
+import { DashboardContext } from '../context/DashboardContext';
 
 function Dashboard() {
-  const [categories, setCategories] = useState([]);
-  const [newCategory, setNewCategory] = useState('');
-
-  const handleAddCategory = (e) => {
-    e.preventDefault();
-    if (newCategory.trim() !== '') {
-      setCategories([...categories, newCategory]);
-      setNewCategory('');
-    }
-  };
+  const {
+    recentUsers,
+    recentProducts,
+    recentRetailers,
+    userCount,
+    productCount,
+    retailerCount,
+    categoryCount,
+    pieData,
+    userStatusPie,
+    retailerStatusPie,
+    combinedStatusPie,
+    lineChartLabels,
+    lineChartData,
+    areaChartLabels,
+    areaChartData,
+  } = useContext(DashboardContext);
 
   return (
     <Layout>
       <div className="p-4 space-y-4">
-        
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-4 gap-4">
-        <Card 
-  title="Primary Card" 
-  color="bg-blue-500" 
-  icon="💸" 
-  value="₹45,231.89" 
-  percent="+20.1%" 
-  percentColor="text-white" 
-/>
-
-<Card 
-  title="Warning Card" 
-  color="bg-yellow-400" 
-  icon="🛒"
-  value="2,350 Orders" 
-  percent="+30.1%" 
-  percentColor="text-white" 
-/>
-
-<Card 
-  title="Success Card" 
-  color="bg-green-500" 
-  icon="✅" 
-  value="12,234 Products" 
-  percent="+12% " 
-  percentColor="text-white" 
-/>
-
-<Card 
-  title="Danger Card" 
-  color="bg-red-500" 
-  icon="❌" 
-  value="573 Issues" 
-  percent="-10%" 
-  percentColor="text-white" 
-/>
-
+          <Card 
+            title="Total Users" 
+            color="bg-blue-500" 
+            icon="👤" 
+            value={userCount} 
+            percent={userCount > 0 ? '+100%' : '0%'} 
+            percentColor="text-white" 
+          />
+          <Card 
+            title="Total Retailers" 
+            color="bg-yellow-400" 
+            icon="🏪"
+            value={retailerCount} 
+            percent={retailerCount > 0 ? '+100%' : '0%'} 
+            percentColor="text-white" 
+          />
+          <Card 
+            title="Total Products" 
+            color="bg-green-500" 
+            icon="📦" 
+            value={productCount} 
+            percent={productCount > 0 ? '+100%' : '0%'} 
+            percentColor="text-white" 
+          />
+          <Card 
+            title="Total Categories" 
+            color="bg-red-500" 
+            icon="🗂️" 
+            value={categoryCount} 
+            percent={categoryCount > 0 ? '+100%' : '0%'} 
+            percentColor="text-white" 
+          />
         </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <AreaChartBox />
-          <BarChartBox />
+        {/* Pie Charts */}
+        <div className="w-full max-w-none grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="w-full h-[400px] flex items-center justify-center">
+            <AreaChartBox data={combinedStatusPie} title="Retailers & Products Status" />
+          </div>
+          <div className="w-full h-[400px] flex items-center justify-center">
+            <LineChartBox title="User Growth Trend" labels={lineChartLabels} data={lineChartData} areaLabels={areaChartLabels} areaData={areaChartData} />
+          </div>
         </div>
-
-        {/* Add Category Form */}
-        <div className="mt-4 p-4 border rounded bg-white shadow">
-          <h2 className="text-xl font-semibold mb-2">Add New Category</h2>
-          <form onSubmit={handleAddCategory} className="flex gap-2">
-            <input
-              type="text"
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              placeholder="Enter category name"
-              className="border p-2 flex-1 rounded"
-            />
-            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
-              Add
-            </button>
-          </form>
-        </div>
-
-        {/* Category Table */}
-        <div className="mt-4 p-4 border rounded bg-white shadow">
-          <h2 className="text-xl font-semibold mb-2">Category List</h2>
-          {categories.length > 0 ? (
-            <table className="w-full table-auto border-collapse">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="border p-2 text-left">Sr No.</th>
-                  <th className="border p-2 text-left">Category Name</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories.map((cat, index) => (
-                  <tr key={index}>
-                    <td className="border p-2">{index + 1}</td>
-                    <td className="border p-2">{cat}</td>
+        {/* Recent Tables */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
+          {/* Recent Users */}
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="font-semibold mb-4 text-lg text-blue-700 flex items-center gap-2">
+              <span className="text-2xl">👤</span> Recently Added Users
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-gray-50">
+                  <tr className="border-b">
+                    <th className="p-3">Name</th>
+                    <th className="p-3">Email</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-gray-500">No categories added yet.</p>
-          )}
+                </thead>
+                <tbody>
+                  {[...recentUsers]
+                    .sort((a, b) => b.created_at && a.created_at ? new Date(b.created_at) - new Date(a.created_at) : 0)
+                    .slice(0, 5)
+                    .map((u, i) => (
+                      <tr key={u.id || i} className="border-b hover:bg-blue-50 transition">
+                        <td className="p-3 font-medium">{u.name}</td>
+                        <td className="p-3">{u.email}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {/* Recent Products */}
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="font-semibold mb-4 text-lg text-green-700 flex items-center gap-2">
+              <span className="text-2xl">📦</span> Recently Added Products
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-gray-50">
+                  <tr className="border-b">
+                    <th className="p-3">Product Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...recentProducts]
+                    .sort((a, b) => b.created_at && a.created_at ? new Date(b.created_at) - new Date(a.created_at) : 0)
+                    .slice(0, 5)
+                    .map((p, i) => (
+                      <tr key={p.id || i} className="border-b hover:bg-green-50 transition">
+                        <td className="p-3 font-medium">{p.name}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {/* Recent Retailers */}
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h3 className="font-semibold mb-4 text-lg text-purple-700 flex items-center gap-2">
+              <span className="text-2xl">🏪</span> Recently Added Retailers
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-gray-50">
+                  <tr className="border-b">
+                    <th className="p-3">Retailer Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...recentRetailers]
+                    .sort((a, b) => b.created_at && a.created_at ? new Date(b.created_at) - new Date(a.created_at) : 0)
+                    .slice(0, 5)
+                    .map((r, i) => (
+                      <tr key={r.id || i} className="border-b hover:bg-purple-50 transition">
+                        <td className="p-3 font-medium">{r.name}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-
       </div>
     </Layout>
   );

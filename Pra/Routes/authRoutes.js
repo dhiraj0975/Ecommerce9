@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
 const userController = require('../controllers/userController');
 const { assignRole } = require('../controllers/userRoleController');
+const { globalSearch } = require('../controllers/globalSearchController');
 
 
 // Public routes
@@ -18,5 +19,6 @@ authRoutes.post('/reset-password', authController.resetPassword);
 
 // Protected routes
 authRoutes.get('/me', auth, authController.getCurrentUser);
+authRoutes.get('/global-search', globalSearch);
 
 module.exports = authRoutes;

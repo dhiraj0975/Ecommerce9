@@ -1,5 +1,5 @@
 // 📁 src/pages/User.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import Layout from "../component/Layout";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,6 +17,7 @@ import AssignRoleModal from '../component/AssignRoleModal';
 import ActionDropdown from '../component/ActionDropdown';
 import StatusToggle from '../component/StatusToggle';
 import { Search, Users, UserCheck, UserX, PlusCircle } from 'lucide-react';
+import { DashboardContext } from "../context/DashboardContext";
 
 const User = () => {
   const [users, setUsers] = useState([]);
@@ -31,6 +32,7 @@ const User = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingUserId, setLoadingUserId] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
+  const { fetchRecentUsers } = useContext(DashboardContext);
 
   const filteredUsers = users
     .filter(user => {
@@ -54,14 +56,10 @@ const User = () => {
 
   const fetchUsers = async () => {
     try {
-     
       const res = await getAdminUsers();
-      
-      
       const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
-     
-      
-      setUsers(data);
+      // Sort users by id ascending (oldest first, newest last)
+      setUsers(data.sort((a, b) => a.id - b.id));
     } catch (error) {
       console.error("Frontend: Error fetching users:", error);
       toast.error("Failed to load users ❌");
@@ -84,6 +82,7 @@ const User = () => {
       try {
         await createAdminUser(newUser);
         await fetchUsers();
+        fetchRecentUsers && fetchRecentUsers();
         toast.success("User added successfully ✅");
         setNewUser({ name: "", email: "", phone: "", password: "", role_ids: [], status: "active" });
         setShowModal(false);
@@ -101,6 +100,7 @@ const User = () => {
     try {
       await updateAdminUser(editingUser.id, newUser);
       await fetchUsers();
+      fetchRecentUsers && fetchRecentUsers();
       toast.success("User updated successfully ✅");
       setEditingUser(null);
       setNewUser({ name: "", email: "", phone: "", password: "", role_ids: [], status: "active" });
@@ -166,6 +166,7 @@ const User = () => {
     try {
       await deleteAdminUser(id);
       await fetchUsers();
+      fetchRecentUsers && fetchRecentUsers();
       toast.success("User deleted successfully ✅");
     } catch {
       toast.error("Failed to delete user ❌");

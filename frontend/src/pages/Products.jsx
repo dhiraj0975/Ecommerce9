@@ -66,7 +66,6 @@ function Products() {
       let data = Array.isArray(res.data) ? res.data : res.data?.data || [];
       data.sort((a, b) => a.id - b.id);
       setProducts(data);
-      setFilteredProducts(data);
     } catch (err) {
       toast.error("❌ Failed to load products");
     }
@@ -121,11 +120,13 @@ function Products() {
       if (editingId) {
         await updateProduct(editingId, newProduct);
         toast.success("✅ Product updated successfully!");
+        fetchProducts();
       } else {
         await createProduct(newProduct);
         toast.success("✅ Product added successfully!");
+        fetchProducts();
       }
-      fetchProducts();
+      filterAndSearchProducts(searchQuery, selectedSubCategoryId, selectedRetailerId, false);
       setNewProduct(initialProductState());
       setEditingId(null);
       setShowDrawer(false);
@@ -154,7 +155,8 @@ function Products() {
       try {
         await deleteProduct(id);
         toast.success("🗑️ Product deleted");
-        fetchProducts();
+        await fetchProducts();
+        filterAndSearchProducts(searchQuery, selectedSubCategoryId, selectedRetailerId, false);
       } catch (err) {
         toast.error("❌ Failed to delete product");
       }
@@ -164,15 +166,20 @@ function Products() {
   const handleSubCategoryFilter = (e) => {
     const subCatId = e.target.value;
     setSelectedSubCategoryId(subCatId);
-    filterAndSearchProducts(searchQuery, subCatId, selectedRetailerId);
+    filterAndSearchProducts(searchQuery, subCatId, selectedRetailerId, true);
     setCurrentPage(1);
   };
 
   useEffect(() => {
-    filterAndSearchProducts(searchQuery, selectedSubCategoryId, selectedRetailerId);
-  }, [searchQuery, products, selectedSubCategoryId, selectedRetailerId]);
+    filterAndSearchProducts(searchQuery, selectedSubCategoryId, selectedRetailerId, true);
+  }, [searchQuery, selectedSubCategoryId, selectedRetailerId]);
 
-  const filterAndSearchProducts = (query, subCatId, retailerId) => {
+  useEffect(() => {
+    filterAndSearchProducts(searchQuery, selectedSubCategoryId, selectedRetailerId, false);
+    // eslint-disable-next-line
+  }, [products]);
+
+  const filterAndSearchProducts = (query, subCatId, retailerId, resetPage = true) => {
     let tempFiltered = [...products];
 
     if (subCatId) {
@@ -195,7 +202,7 @@ function Products() {
     }
 
     setFilteredProducts(tempFiltered);
-    setCurrentPage(1);
+    if (resetPage) setCurrentPage(1);
   };
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);

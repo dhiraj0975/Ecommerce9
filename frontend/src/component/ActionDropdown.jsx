@@ -92,12 +92,19 @@ export default function ActionDropdown({ user, onEdit, onAssignRole, onDelete })
       <button 
         ref={buttonRef}
         onClick={toggleDropdown}
-        className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-transparent hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-all duration-200"
+        className={`inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/70 backdrop-blur-md border border-gray-200 shadow-sm hover:shadow-xl hover:bg-gradient-to-br hover:from-blue-100 hover:to-purple-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 transition-all duration-200
+        ${isOpen ? 'ring-2 ring-blue-500 scale-110 shadow-blue-200/80' : ''}`}
+        style={{ boxShadow: isOpen ? '0 4px 24px 0 rgba(59,130,246,0.15)' : undefined }}
+        aria-label="Actions"
       >
-        <MoreHorizontal
-          className="h-5 w-5 text-gray-600 hover:text-gray-800 transition-colors"
-          aria-hidden="true"
-        />
+        {isOpen ? (
+          <X className="h-6 w-6 text-blue-600 transition-all duration-200 scale-110" aria-hidden="true" />
+        ) : (
+          <MoreHorizontal
+            className="h-6 w-6 text-gray-600 group-hover:text-blue-500 transition-all duration-200 group-hover:scale-110"
+            aria-hidden="true"
+          />
+        )}
       </button>
 
       {/* Backdrop */}
