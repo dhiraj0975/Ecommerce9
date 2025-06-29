@@ -10,34 +10,42 @@ export default function ActionDropdown({ user, onEdit, onAssignRole, onDelete })
 
   const handleAction = (action) => {
     setIsOpen(false);
-    action();
+    setTimeout(() => {
+      action();
+    }, 100);
   };
 
   const toggleDropdown = () => {
     if (!isOpen && buttonRef.current) {
+      // Calculate position when opening
       const buttonRect = buttonRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const viewportWidth = window.innerWidth;
-      const dropdownHeight = 320;
+      const dropdownHeight = 400; // Approximate height
       const dropdownWidth = 320; // w-80 = 320px
       
-      // Position dropdown near the button
-      let top = buttonRect.bottom + 8; // 8px gap below button
-      let left = buttonRect.right - dropdownWidth; // Align to right edge of button
+      // Start with button position - LEFT SIDE
+      let top = buttonRect.bottom + 8;
+      let left = buttonRect.left - dropdownWidth; // Changed to left side
       
-      // Check if dropdown would go below viewport
+      // Adjust if would go below viewport
       if (top + dropdownHeight > viewportHeight) {
-        top = buttonRect.top - dropdownHeight - 8; // Show above button
+        top = buttonRect.top - dropdownHeight - 8;
       }
       
-      // Check if dropdown would go outside left edge
+      // Adjust if would go outside left edge
       if (left < 8) {
-        left = 8; // Minimum 8px from left edge
+        left = 8;
       }
       
-      // Check if dropdown would go outside right edge
+      // Adjust if would go outside right edge
       if (left + dropdownWidth > viewportWidth - 8) {
-        left = viewportWidth - dropdownWidth - 8; // Minimum 8px from right edge
+        left = viewportWidth - dropdownWidth - 8;
+      }
+      
+      // Ensure minimum top position
+      if (top < 8) {
+        top = 8;
       }
       
       setPosition({ top, left });
@@ -54,12 +62,31 @@ export default function ActionDropdown({ user, onEdit, onAssignRole, onDelete })
       }
     };
 
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    const handleScroll = () => {
+      if (isOpen) {
+        setIsOpen(false);
+      }
+    };
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+      window.addEventListener('scroll', handleScroll);
+      // Prevent body scroll when dropdown is open
+      document.body.style.overflow = 'hidden';
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('scroll', handleScroll);
+      document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
 
@@ -98,10 +125,10 @@ export default function ActionDropdown({ user, onEdit, onAssignRole, onDelete })
         aria-label="Actions"
       >
         {isOpen ? (
-          <X className="h-6 w-6 text-blue-600 transition-all duration-200 scale-110" aria-hidden="true" />
+          <X className="h-6 w-6 text-blue-600" aria-hidden="true" />
         ) : (
           <MoreHorizontal
-            className="h-6 w-6 text-gray-600 group-hover:text-blue-500 transition-all duration-200 group-hover:scale-110"
+            className="h-6 w-6 text-gray-600 group-hover:text-blue-500 transition-all duration-200"
             aria-hidden="true"
           />
         )}
@@ -110,16 +137,16 @@ export default function ActionDropdown({ user, onEdit, onAssignRole, onDelete })
       {/* Backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/20 z-40" 
+          className="fixed inset-0 bg-black/20 z-[9998]" 
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      {/* Magic Dropdown */}
+      {/* Dropdown - NO ANIMATIONS */}
       {isOpen && (
         <div 
           ref={dropdownRef}
-          className="fixed w-80 rounded-2xl bg-white shadow-2xl border border-gray-200/50 z-50 animate-in zoom-in-95 duration-200"
+          className="fixed w-80 rounded-2xl bg-white shadow-2xl border border-gray-200/50 z-[9999]"
           style={{
             top: `${position.top}px`,
             left: `${position.left}px`
@@ -139,7 +166,7 @@ export default function ActionDropdown({ user, onEdit, onAssignRole, onDelete })
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-full hover:bg-gray-100 transition-all duration-200 hover:scale-110"
+                className="p-1.5 rounded-full hover:bg-gray-100 transition-all duration-200"
               >
                 <X className="h-4 w-4 text-gray-500" />
               </button>
@@ -149,7 +176,7 @@ export default function ActionDropdown({ user, onEdit, onAssignRole, onDelete })
             <div className="space-y-2">
               <button
                 onClick={() => handleAction(() => onEdit(user))}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200/50 transition-all duration-300 group hover:scale-[1.02] hover:shadow-lg"
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200/50 transition-all duration-300 group"
               >
                 <div className="w-9 h-9 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-md">
                   <Edit className="h-4 w-4 text-white" />
@@ -162,7 +189,7 @@ export default function ActionDropdown({ user, onEdit, onAssignRole, onDelete })
 
               <button
                 onClick={() => handleAction(() => onAssignRole(user))}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border border-purple-200/50 transition-all duration-300 group hover:scale-[1.02] hover:shadow-lg"
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 border border-purple-200/50 transition-all duration-300 group"
               >
                 <div className="w-9 h-9 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-md">
                   <Shield className="h-4 w-4 text-white" />
@@ -175,7 +202,7 @@ export default function ActionDropdown({ user, onEdit, onAssignRole, onDelete })
 
               <button
                 onClick={() => handleAction(() => onDelete(user.id))}
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 border border-red-200/50 transition-all duration-300 group hover:scale-[1.02] hover:shadow-lg"
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-red-50 to-pink-50 hover:from-red-100 hover:to-pink-100 border border-red-200/50 transition-all duration-300 group"
               >
                 <div className="w-9 h-9 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-md">
                   <Trash className="h-4 w-4 text-white" />

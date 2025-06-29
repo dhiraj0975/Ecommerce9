@@ -247,7 +247,9 @@ const User = () => {
   return (
     <Layout>
       <div className="px-2 md:px-4 py-4 relative">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">User Manager</h2>
+        <h2 className="text-2xl font-bold mb-4 text-gray-800">
+          User Manager
+        </h2>
         
         {/* Top Bar: Add User, Filters, Search */}
         <div className="p-4 bg-white shadow-md rounded-lg mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -303,7 +305,7 @@ const User = () => {
 
         <div className={`transition-all duration-300 ${showModal ? "md:mr-96" : ""}`}>
           {/* Desktop Table View */}
-          <div className="bg-white shadow-md rounded-lg overflow-x-auto w-full hidden md:block">
+          <div className="bg-white shadow-md rounded-lg overflow-x-auto w-full hidden md:block relative">
             <table className="w-full border">
               <thead className="bg-gray-100 border-b">
                 <tr>
@@ -320,51 +322,54 @@ const User = () => {
                 {currentUsers.map((user, index) => {
                   const isActive = user.status?.toLowerCase() === 'active';
                   return (
-                  <tr key={user.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-2 border text-center">{(currentPage - 1) * usersPerPage + index + 1}</td>
-                    <td className="px-4 py-2 border text-center">{user.name}</td>
-                    <td className="px-4 py-2 border text-center">{user.email}</td>
-                    <td className="px-4 py-2 border text-center">{user.phone}</td>
-                    <td className="px-4 py-2 border text-center">
-                      <button
-                        onClick={() => handleOpenRoleModal(user)}
-                        className="w-full h-full text-left p-2 rounded-md hover:bg-purple-200 active:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200"
-                        title="Click to assign roles"
-                      >
-                        <div className="text-sm">
-                          {user.roles && user.roles.length > 0 ? (
-                            <span className="text-blue-600 font-medium">
-                              {user.roles.map((role, idx) => (
-                                <span key={role.role_id}>
-                                  {role.role_name}
-                                  {idx < user.roles.length - 1 && ', '}
-                                </span>
-                              ))}
-                            </span>
-                          ) : (
-                            <span className="text-gray-500">No roles</span>
-                          )}
-                        </div>
-                      </button>
-                    </td>
-                    <td className="px-4 py-2 border text-center">
-                      <StatusToggle
-                        isActive={isActive}
-                        loading={loadingUserId === user.id}
-                        onToggle={() => handleUpdateStatus(user.id, isActive)}
-                      />
-                    </td>
-                    <td className="px-4 py-2 border text-center">
-                      <div className="relative">
-                        <ActionDropdown
-                          user={user}
-                          onEdit={handleEditUser}
-                          onAssignRole={handleOpenRoleModal}
-                          onDelete={handleDeleteUser}
+                    <tr 
+                      key={user.id} 
+                      className="border-b hover:bg-gray-50"
+                    >
+                      <td className="px-4 py-2 border text-center">{(currentPage - 1) * usersPerPage + index + 1}</td>
+                      <td className="px-4 py-2 border text-center">{user.name}</td>
+                      <td className="px-4 py-2 border text-center">{user.email}</td>
+                      <td className="px-4 py-2 border text-center">{user.phone}</td>
+                      <td className="px-4 py-2 border text-center">
+                        <button
+                          onClick={() => handleOpenRoleModal(user)}
+                          className="w-full h-full text-left p-2 rounded-md hover:bg-purple-200 active:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200"
+                          title="Click to assign roles"
+                        >
+                          <div className="text-sm">
+                            {user.roles && user.roles.length > 0 ? (
+                              <span className="text-blue-600 font-medium">
+                                {user.roles.map((role, idx) => (
+                                  <span key={role.role_id}>
+                                    {role.role_name}
+                                    {idx < user.roles.length - 1 && ', '}
+                                  </span>
+                                ))}
+                              </span>
+                            ) : (
+                              <span className="text-gray-500">No roles</span>
+                            )}
+                          </div>
+                        </button>
+                      </td>
+                      <td className="px-4 py-2 border text-center">
+                        <StatusToggle
+                          isActive={isActive}
+                          loading={loadingUserId === user.id}
+                          onToggle={() => handleUpdateStatus(user.id, isActive)}
                         />
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="px-4 py-2 border text-center">
+                        <div className="relative z-10">
+                          <ActionDropdown
+                            user={user}
+                            onEdit={handleEditUser}
+                            onAssignRole={handleOpenRoleModal}
+                            onDelete={handleDeleteUser}
+                          />
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
@@ -376,18 +381,23 @@ const User = () => {
             {currentUsers.map((user, index) => {
               const isActive = user.status?.toLowerCase() === 'active';
               return (
-                <div key={user.id} className="bg-white shadow-md rounded-lg p-4 space-y-3">
+                <div 
+                  key={user.id} 
+                  className="bg-white shadow-md rounded-lg p-4 space-y-3 relative"
+                >
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-lg font-bold text-gray-800">{user.name}</p>
                       <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
-                    <ActionDropdown
-                      user={user}
-                      onEdit={handleEditUser}
-                      onAssignRole={handleOpenRoleModal}
-                      onDelete={handleDeleteUser}
-                    />
+                    <div className="relative z-10">
+                      <ActionDropdown
+                        user={user}
+                        onEdit={handleEditUser}
+                        onAssignRole={handleOpenRoleModal}
+                        onDelete={handleDeleteUser}
+                      />
+                    </div>
                   </div>
                   <div className="text-sm space-y-1">
                     <p><strong className="text-gray-600">Phone:</strong> {user.phone}</p>
