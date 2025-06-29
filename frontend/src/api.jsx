@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://ecommerce11-tjd2.vercel.app/api',
     withCredentials: true, // ⬅️ yeh add karo
 });
 
